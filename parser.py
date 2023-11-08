@@ -2,6 +2,7 @@ import enum
 import requests
 from bs4 import BeautifulSoup, element
 import os
+import zipfile
 
 HEADERS = {
     "Host": "spbu.ru",
@@ -25,7 +26,7 @@ class Table(enum.StrEnum):
     ep_desc = "Информация об описании образовательных программ"
 
 
-def get_info_from_ep_desc(soup: BeautifulSoup):
+def get_info_from_ep_desc(soup: BeautifulSoup, code):
     target_header = soup.find(
         "h3", string="Информация об описании образовательных программ"
     )
@@ -36,18 +37,18 @@ def get_info_from_ep_desc(soup: BeautifulSoup):
         table = table.find_all("tr")
 
         links = []
-        names = []
         
         for row in table:
             info = row.find_all("td")
-            links.append(info[6].find_all("a"))
-            names.append(info[3].text)
+            if code:
+                if info[0].text in code:
+                    print(info[0].text, code)
+                    links.append(info[6].find_all("a"))
 
         counter = 1
-        for i in range(2, len(links)):
+        for i in range(len(links)):
             for link in links[i]:
                 catalog_url = link["href"].strip()
-                folder_name = names[i]
                 file_name = link.text
                 catalog_response = requests.get(catalog_url)
                 if catalog_response.status_code == 200:
@@ -57,15 +58,17 @@ def get_info_from_ep_desc(soup: BeautifulSoup):
                     if isinstance(download_link, list):
                         download_link = download_link[0]
 
-                    print(counter, f'./files/{folder_name}/{file_name}.zip')
+                    print(counter, f'./files/{catalog_url}/{file_name}.zip')
                     counter += 1
-
+                    folder_name = catalog_url.split('/')[-1]
                     response = requests.get(download_link)
                     
-                    if not os.path.exists(f'files/{folder_name}'):
-                        os.makedirs(f'files/{folder_name}')
-                    with open(f'./files/{folder_name}/{file_name}.zip', "wb") as file:
+                    with open(f'./files/{folder_name}.zip', "wb") as file:
                         file.write(response.content)
+                    with zipfile.ZipFile(f'./files/{folder_name}.zip', 'r') as zip_ref:
+                        zip_ref.extractall(f'./files/{folder_name}')
+                    if os.path.exists(f'./files/{folder_name}.zip'):
+                        os.remove(f'./files/{folder_name}.zip')
                 else:
                     print(
                         "f'Ошибка {catalog_response.status_code} при загрузке страницы с файлами'"
@@ -76,16 +79,17 @@ def get_info_from_ep_desc(soup: BeautifulSoup):
         )
 
 
-def get_info_from_table(table: Table):
+def get_info_from_table(table: Table, code = set()):
     d = {Table.ep_desc: get_info_from_ep_desc}
 
     spbu_edu_response = requests.get(SPBU_EDU_URL, headers=HEADERS)
     if spbu_edu_response.status_code == 200:
         spbu_edu = BeautifulSoup(spbu_edu_response.text, "html.parser")
-        d[table](spbu_edu)
+        d[table](spbu_edu, code)
     else:
         print(f"Ошибка {spbu_edu_response.status_code} при загрузке основной страницы")
 
 
 table_instance = Table.ep_desc
-get_info_from_table(table_instance)
+code = {"02.03.01"}
+get_info_from_table(table_instance, code)
