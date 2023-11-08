@@ -1,18 +1,12 @@
 import os
 import platform
+import pytesseract
+import docx
 from tempfile import TemporaryDirectory
 from pathlib import Path
-
-import pytesseract
 from pdf2image import convert_from_path
 from PIL import Image
-import os.path
 
-import string
-import docx
-
-import xml.etree.ElementTree as ET
-import io
 
 def ocr_pdf(file):
     if platform.system() == "Windows":
@@ -73,7 +67,8 @@ def ocr_pdf(file):
             #output_file.write(text)
 
             return str(text)
-        
+
+
 def read_docx(file_path):
     doc = docx.Document(file_path)
 
@@ -82,14 +77,3 @@ def read_docx(file_path):
     for para in all_paras:
         text += " " + str(para.text)
     return text 
-
-directory_path = "C:\sphinx\data\source"
-directory = os.listdir(directory_path)
-
-
-for index, file in enumerate(directory):
-    if file.endswith('.pdf'):
-        text = ocr_pdf(file)
-    if file.endswith('.docx'):
-        text = read_docx(directory_path + '\\' + file)
-        
