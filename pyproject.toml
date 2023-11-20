@@ -22,3 +22,6 @@ uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.blue]
+line-length = 100
