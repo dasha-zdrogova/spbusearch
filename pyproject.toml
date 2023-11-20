@@ -18,7 +18,6 @@ ocrmypdf = "^15.4.3"
 [tool.poetry.group.dev.dependencies]
 blue = "^0.9.1"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
-pre-commit = "^3.5.0"
 
 [build-system]
 requires = ["poetry-core"]
