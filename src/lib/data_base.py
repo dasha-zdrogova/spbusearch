@@ -1,39 +1,68 @@
-import psycopg2
-import os
+import pymysql
 from glob import glob
 from ocr_files import read_docx, ocr_pdf
 
-#подключаемся к базе данных
+
 try:
-    conn = psycopg2.connect(dbname='spbu_search', user='postgres', password='1234567', host="localhost", port="5432")
-    print("Connection to PostgreSQL DB successful")
-except:
-    print('Cant establish connection to database')
 
-conn.autocommit = True
 
-cur = conn.cursor()
+    #подключаемся к серверу
+    with pymysql.connect(
+        host = "127.0.0.1",
+        user='root',
+        password='12345678',
+    ) as connection:
+        #создаем нужную базу данных
+        create_db_query = "CREATE DATABASE IF NOT EXISTS spbusearch"
+        with connection.cursor() as cursor:
+            cursor.execute(create_db_query)
 
-#создаем внутри базы данных таблицу с содержимым файлов
-cur.execute('''CREATE TABLE files  
-    (id serial PRIMARY KEY,
-     file_name varchar(100) NOT NULL,
-     URL varchar(100) NOT NULL,
-     content text);''')
 
-#для каждого файла указанного расширения извлекаем имя файла, url из названия папки и текст документа
-for file in glob('**/*.docx', recursive=True):
-    text = read_docx(file)
-    url = file.split(sep="\\")[1]
-    file_name = file.split(sep="\\")[-1]
-    inserts = (file_name, url, text)
-    cur.execute("INSERT INTO files (file_name, URL, content) VALUES (%s, %s, %s)", file_name, url, text)
+except Exception as e:
+    print(e)
 
-for file in glob('**/*.pdf', recursive=True):
-    text = ocr_pdf(file)
-    url = file.split(sep="\\")[1]
-    file_name = file.split(sep="\\")[-1]
-    cur.execute("INSERT INTO files (file_name, URL, content) VALUES (%s, %s, %s)", file_name, url, text)
 
-cur.close()
-conn.close()
+try:
+
+    #подключаемся к созданной базе данных
+    with pymysql.connect(
+        host = "127.0.0.1",
+        user='root',
+        password='12345678',
+        database="spbusearch"
+    ) as connection:
+        
+
+        #создаем таблицу, в которую будем сохранять инфу по файлам для индексации
+        with connection.cursor() as cursor:
+            create_table_query = "CREATE TABLE files (id int AUTO_INCREMENT, file_name varchar(100), URL varchar(100), content text, PRIMARY KEY(id));"
+            cursor.execute(create_table_query)
+            connection.commit()
+
+
+        #чтение и сохранение данных из файлов формата docx (которые сохранили в папку после работы парсера)
+        for file in glob('**/*.docx', recursive=True):
+            text = read_docx(file)
+            url = file.split(sep='\\')[1]
+            file_name = file.split(sep='\\')[-1]
+            inserts = (file_name, url, text)
+            cursor.execute(
+                'INSERT INTO files (file_name, URL, content) VALUES (%s, %s, %s)', file_name, url, text
+            )
+            connection.commit()
+
+
+        #чтение и сохранение данных из файлов формата pdf (которые сохранили в папку после работы парсера)
+        for file in glob('**/*.pdf', recursive=True):
+            text = ocr_pdf(file)
+            url = file.split(sep='\\')[1]
+            file_name = file.split(sep='\\')[-1]
+            cursor.execute(
+                'INSERT INTO files (file_name, URL, content) VALUES (%s, %s, %s)', file_name, url, text
+            )
+            connection.commit()
+
+
+
+except Exception as e:
+    print(e)
