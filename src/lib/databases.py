@@ -1,7 +1,10 @@
-import pymysql
-from glob import glob
-from ocr_files import read_docx, ocr_pdf
 import platform
+from glob import glob
+
+import pymysql
+
+from .data import Match
+from .ocr_files import ocr_pdf, read_docx
 
 if platform.system() == 'Windows':
     host = 'localhost'
@@ -63,10 +66,11 @@ def data_for_databases():
 
 
 # функция для полнотекстового поиска
-def get_matches(connection, search_str):
+def get_matches(connection, search_str) -> list[Match]:
     cursor = connection.cursor()
     cursor.execute(
-        f'SELECT *, HIGHLIGHT({{limit={50 + len(search_str)}}}) FROM files WHERE MATCH({search_str})'
+        f'SELECT *, HIGHLIGHT({{limit={50 + len(search_str)}}}) FROM files WHERE MATCH(%s)',
+        (search_str,),
     )
     result = cursor.fetchall()
     for row in result:

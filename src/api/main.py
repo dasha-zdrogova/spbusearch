@@ -1,11 +1,15 @@
+from dataclasses import asdict
+
 from fastapi import FastAPI
+
+from ..lib import databases
 
 app = FastAPI()
 
 
-@app.get('/')
-async def read_root():
-    return {'Hello': 'World'}
+@app.get('/search')
+async def read_root(search_str: str):
+    return [asdict(match.to_result(search_str)) for match in databases.get_matches(search_str)]
 
 
 @app.get('/items/{item_id}')
