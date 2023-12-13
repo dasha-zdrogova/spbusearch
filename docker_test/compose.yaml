@@ -1,0 +1,21 @@
+version: '2.2'
+
+services:
+  web:
+    container_name: web
+    build: ..
+    ports:
+      - 0.0.0.0:80:80
+  manticore:
+    container_name: manticore
+    image: manticoresearch/manticore
+    environment:
+      - EXTRA=1
+    restart: always
+    ports:
+      - 127.0.0.1:9306:9306
+      - 127.0.0.1:9308:9308
+    # ulimits:
+    #   nproc: 3000
+    volumes:
+      - ./data:/var/lib/manticore
