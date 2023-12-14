@@ -20,7 +20,7 @@ def read_pdf(file_path) -> str:
         raise ValueError('Invalid file extension')
 
     # fitz - извлечение текста из доков с текстовым слоем
-    doc = fitz.open(file_path)
+    doc = fitz.open(file_path)  # type: ignore
 
     text_dict = ''
     for current_page in range(len(doc)):
