@@ -18,7 +18,7 @@ def create_db():
                 ' CREATE TABLE IF NOT EXISTS files'
                 ' ('
                 ' file_name string attribute indexed,'
-                ' URL string,'
+                ' url string,'
                 ' content text'
                 ' )'
                 " morphology='stem_enru'"
@@ -34,7 +34,7 @@ def process_file(file: str, text: str, cursor: DictCursor, connection: Connectio
     url = file.split(sep='\\')[1]
     file_name = file.split(sep='\\')[-1]
     cursor.execute(
-        'INSERT INTO files (file_name, URL, content) VALUES (%s, %s, %s)',
+        'INSERT INTO files (file_name, url, content) VALUES (%s, %s, %s)',
         (file_name, url, text),
     )
     connection.commit()
@@ -64,12 +64,12 @@ def get_matches(search_str: str) -> list[Match]:
     with get_connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT file_name, URL, HIGHLIGHT() FROM files WHERE MATCH(%s)',
+                'SELECT file_name, url, highlight() FROM files WHERE MATCH(%s)',
                 (search_str,),
             )
             result = cursor.fetchall()
             for row in result:
                 res.append(
-                    Match(url=row['URL'], title=row['file_name'], preview=row['HIGHLIGHT()'])
+                    Match(url=row['url'], title=row['file_name'], preview=row['highlight()'])
                 )
     return res

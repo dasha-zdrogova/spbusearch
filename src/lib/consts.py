@@ -3,7 +3,7 @@ import platform
 
 if platform.system() == 'Windows':
     HOST = 'localhost'
-elif os.environ['DOCKER']:
+elif os.environ.get('DOCKER'):
     HOST = 'host.docker.internal'
 else:
     HOST = '0'
