@@ -1,77 +1,75 @@
-import platform
 from glob import glob
+import shutil
 
 import pymysql
+from pymysql import Connection
+from pymysql.cursors import DictCursor
 
-from .data import Match
-from .ocr_files import ocr_pdf, read_docx
-
-if platform.system() == 'Windows':
-    host = 'localhost'
-else:
-    host = '0'
+from data import Match
+from ocr_files import ocr_pdf, read_docx
+from consts import HOST, PORT, NEW_FILES_PATH, PROCESSED_FILES_PATH
 
 
 # функция для подключения к серверу и создание базы данных
-def connection():
-    connection = pymysql.connect(host=host, port=9306)
+def create_db():
+    with pymysql.connect(host=HOST, port=PORT) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                ' CREATE TABLE IF NOT EXISTS files'
+                ' ('
+                ' file_name string attribute indexed,'
+                ' URL string,'
+                ' content text'
+                ' )'
+                " morphology='stem_enru'"
+            )
+        connection.commit()
 
-    create_db_query = 'CREATE DATABASE IF NOT EXISTS spbusearch'
-    cursor = connection.cursor()
-    cursor.execute(create_db_query)
+
+def get_connection() -> Connection:
+    return pymysql.connect(host=HOST, port=PORT, cursorclass=DictCursor)
+
+
+def process_file(file: str, text: str, cursor: DictCursor, connection: Connection):
+    url = file.split(sep='\\')[1]
+    file_name = file.split(sep='\\')[-1]
+    cursor.execute(
+        'INSERT INTO files (file_name, URL, content) VALUES (%s, %s, %s)',
+        (file_name, url, text),
+    )
     connection.commit()
+    shutil.move(file, PROCESSED_FILES_PATH)
 
 
 # первичное добавление документов после парсинга в базу данных
 def data_for_databases():
-    connection = pymysql.connect(host=host, port=9306, database='spbusearch')
+    with get_connection() as connection:
+        with connection.cursor() as cursor:
+            # чтение и сохранение данных из файлов формата docx
+            # (которые сохранили в папку после работы парсера)
+            for file in glob(f'{NEW_FILES_PATH}/*.docx', recursive=True):
+                text = read_docx(file)
+                process_file(file, text, cursor, connection)
 
-    cursor = connection.cursor()
-
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS files  
-        (file_name string indexed,
-        URL string,
-        content text) 
-        morphology='stem_enru';"""
-    )
-    connection.commit()
-
-    # чтение и сохранение данных из файлов формата docx (которые сохранили в папку после работы парсера)
-    for file in glob('**/*.docx', recursive=True):
-        text = read_docx(file)
-        url = file.split(sep='\\')[1]
-        file_name = file.split(sep='\\')[-1]
-        cursor.execute(
-            'INSERT INTO files (file_name, URL, content) VALUES (%s, %s, %s)',
-            (file_name, url, text),
-        )
-        connection.commit()
-
-    # чтение и сохранение данных из файлов формата pdf (которые сохранили в папку после работы парсера)
-    for file in glob('**/*.pdf', recursive=True):
-        text = ocr_pdf(file)
-        url = file.split(sep='\\')[1]
-        file_name = file.split(sep='\\')[-1]
-        cursor.execute(
-            'INSERT INTO files (file_name, URL, content) VALUES (%s, %s, %s)',
-            (file_name, url, text),
-        )
-        connection.commit()
-
-    cursor.execute('SELECT file_name from files')
-    result = cursor.fetchall()
-    for row in result:
-        print(row + 'добавлен в базу данных')
+            # чтение и сохранение данных из файлов формата pdf
+            # (которые сохранили в папку после работы парсера)
+            for file in glob(f'{NEW_FILES_PATH}/*.pdf', recursive=True):
+                text = ocr_pdf(file)
+                process_file(file, text, cursor, connection)
 
 
 # функция для полнотекстового поиска
-def get_matches(connection, search_str) -> list[Match]:
-    cursor = connection.cursor()
-    cursor.execute(
-        f'SELECT *, HIGHLIGHT({{limit={50 + len(search_str)}}}) FROM files WHERE MATCH(%s)',
-        (search_str,),
-    )
-    result = cursor.fetchall()
-    for row in result:
-        print(row)
+def get_matches(search_str: str) -> list[Match]:
+    res = []
+    with get_connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                'SELECT file_name, URL, HIGHLIGHT() FROM files WHERE MATCH(%s)',
+                (search_str,),
+            )
+            result = cursor.fetchall()
+            for row in result:
+                res.append(
+                    Match(url=row['URL'], title=row['file_name'], preview=row['HIGHLIGHT()'])
+                )
+    return res

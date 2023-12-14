@@ -6,12 +6,12 @@ import zipfile
 
 HEADERS = {
     'Host': 'spbu.ru',
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/118.0',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/118.0',  # noqa E501
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',  # noqa E501
     'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3',
     'Accept-Encoding': 'gzip, deflate, br, utf-8    ',
     'Connection': 'keep-alive',
-    'Cookie': '_ga=GA1.2.2008980570.1693922335; _ga_2K5KETN6FV=GS1.2.1695037316.8.1.1695037321.55.0.0; _ga_GGB4VG074D=GS1.2.1697438156.18.1.1697438316.0.0.0; _pk_ref.130.0b31=%5B%22%22%2C%22%22%2C1698221384%2C%22https%3A%2F%2Fwww.google.com%2F%22%5D; _pk_id.130.0b31=214a72a4e06148fd.1696495071.; _ga_8F1L5WCW6L=GS1.2.1698221384.5.1.1698222953.60.0.0; session-cookie=17914b599b3330162500c5d94c95548fbc85a7c30d3acb6be9373e8e4c90c89da6fc861105a2cd4c154bff2b1e36ae60; _pk_ses.130.0b31=1; _gid=GA1.2.202221708.1698221384',
+    'Cookie': '_ga=GA1.2.2008980570.1693922335; _ga_2K5KETN6FV=GS1.2.1695037316.8.1.1695037321.55.0.0; _ga_GGB4VG074D=GS1.2.1697438156.18.1.1697438316.0.0.0; _pk_ref.130.0b31=%5B%22%22%2C%22%22%2C1698221384%2C%22https%3A%2F%2Fwww.google.com%2F%22%5D; _pk_id.130.0b31=214a72a4e06148fd.1696495071.; _ga_8F1L5WCW6L=GS1.2.1698221384.5.1.1698222953.60.0.0; session-cookie=17914b599b3330162500c5d94c95548fbc85a7c30d3acb6be9373e8e4c90c89da6fc861105a2cd4c154bff2b1e36ae60; _pk_ses.130.0b31=1; _gid=GA1.2.202221708.1698221384',  # noqa E501
     'Upgrade-Insecure-Requests': '1',
     'Sec-Fetch-Dest': 'document',
     'Sec-Fetch-Mode': 'navigate',
