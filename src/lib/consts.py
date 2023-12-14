@@ -10,5 +10,10 @@ else:
 
 PORT = 9306
 
-NEW_FILES_PATH = '../../files'
-PROCESSED_FILES_PATH = '../../processed'
+
+def _get_path(path: str) -> str:
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), path))
+
+
+PROCESSED_FILES_PATH = _get_path('../../processed')
+DOWNLOADED_FILES_PATH = _get_path('../../downloaded')

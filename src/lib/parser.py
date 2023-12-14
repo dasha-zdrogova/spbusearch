@@ -1,8 +1,11 @@
 import enum
-import requests
-from bs4 import BeautifulSoup, element
 import os
 import zipfile
+
+import requests
+from bs4 import BeautifulSoup, element
+
+from consts import DOWNLOADED_FILES_PATH
 
 HEADERS = {
     'Host': 'spbu.ru',
@@ -29,8 +32,8 @@ class Table(enum.StrEnum):
 def get_info_from_ep_desc(soup: BeautifulSoup, code):
     target_header = soup.find('h3', string='Информация об описании образовательных программ')
     if target_header:
-        if not os.path.exists('files'):
-            os.makedirs('files')
+        if not os.path.exists(DOWNLOADED_FILES_PATH):
+            os.makedirs(DOWNLOADED_FILES_PATH)
         assert isinstance(table := target_header.find_next('table'), element.Tag)
         table = table.find_all('tr')
 
@@ -58,17 +61,19 @@ def get_info_from_ep_desc(soup: BeautifulSoup, code):
                     if isinstance(download_link, list):
                         download_link = download_link[0]
 
-                    print(counter, f'./files/{catalog_url}/{file_name}.zip')
+                    print(counter, f'{DOWNLOADED_FILES_PATH}/{catalog_url}/{file_name}.zip')
                     counter += 1
                     folder_name = catalog_url.split('/')[-1]
                     response = requests.get(download_link)
 
-                    with open(f'./files/{folder_name}.zip', 'wb') as file:
+                    with open(f'{DOWNLOADED_FILES_PATH}/{folder_name}.zip', 'wb') as file:
                         file.write(response.content)
-                    with zipfile.ZipFile(f'./files/{folder_name}.zip', 'r') as zip_ref:
-                        zip_ref.extractall(f'./files/{folder_name}')
-                    if os.path.exists(f'./files/{folder_name}.zip'):
-                        os.remove(f'./files/{folder_name}.zip')
+                    with zipfile.ZipFile(
+                        f'{DOWNLOADED_FILES_PATH}/{folder_name}.zip', 'r'
+                    ) as zip_ref:
+                        zip_ref.extractall(f'{DOWNLOADED_FILES_PATH}/{folder_name}')
+                    if os.path.exists(f'{DOWNLOADED_FILES_PATH}/{folder_name}.zip'):
+                        os.remove(f'{DOWNLOADED_FILES_PATH}/{folder_name}.zip')
                 else:
                     print(
                         "f'Ошибка {catalog_response.status_code} при загрузке страницы с файлами'"

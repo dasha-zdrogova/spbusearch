@@ -1,7 +1,6 @@
 import docx
 import fitz
 import os.path
-import ocrmypdf
 
 
 def read_docx(file_path) -> str:
@@ -14,17 +13,11 @@ def read_docx(file_path) -> str:
     return text
 
 
-def ocr_pdf(file_path) -> str:
+def read_pdf(file_path) -> str:
     if not os.path.isfile(file_path):
         raise ValueError('File not found')
     if not file_path.endswith('.pdf'):
         raise ValueError('Invalid file extension')
-
-    # ocrmypdf - добавление в файл текстового слоя с распознанным текстом из документа
-    try:
-        ocrmypdf.ocr(file_path, file_path, deskew=True, language=['eng', 'rus'], use_threads=True)
-    except ocrmypdf.EncryptedPdfERror:
-        raise ValueError('Текст уже имеет текстовый слой')
 
     # fitz - извлечение текста из доков с текстовым слоем
     doc = fitz.open(file_path)

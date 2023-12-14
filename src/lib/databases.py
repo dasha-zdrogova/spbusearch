@@ -1,3 +1,4 @@
+import os
 from glob import glob
 import shutil
 
@@ -6,8 +7,8 @@ from pymysql import Connection
 from pymysql.cursors import DictCursor
 
 from data import Match
-from ocr_files import ocr_pdf, read_docx
-from consts import HOST, PORT, NEW_FILES_PATH, PROCESSED_FILES_PATH
+from ocr_files import read_pdf, read_docx
+from consts import HOST, PORT, PROCESSED_FILES_PATH, DOWNLOADED_FILES_PATH
 
 
 # функция для подключения к серверу и создание базы данных
@@ -31,8 +32,8 @@ def get_connection() -> Connection:
 
 
 def process_file(file: str, text: str, cursor: DictCursor, connection: Connection):
-    url = file.split(sep='\\')[1]
-    file_name = file.split(sep='\\')[-1]
+    url = r'https://nc.spbu.ru/s/' + file.split(os.sep)[1]
+    file_name = file.split(os.sep)[-1]
     cursor.execute(
         'INSERT INTO files (file_name, url, content) VALUES (%s, %s, %s)',
         (file_name, url, text),
@@ -43,18 +44,28 @@ def process_file(file: str, text: str, cursor: DictCursor, connection: Connectio
 
 # первичное добавление документов после парсинга в базу данных
 def data_for_databases():
+    for file in (
+        set(glob(f'{DOWNLOADED_FILES_PATH}/**/*', recursive=True))
+        - set(glob(f'{DOWNLOADED_FILES_PATH}/**/*.docx', recursive=True))
+        - set(glob(f'{DOWNLOADED_FILES_PATH}/**/*.pdf', recursive=True))
+    ):
+        if not os.path.isdir(file):
+            os.remove(file)
+        elif not os.listdir(file):
+            os.rmdir(file)
+
     with get_connection() as connection:
         with connection.cursor() as cursor:
             # чтение и сохранение данных из файлов формата docx
             # (которые сохранили в папку после работы парсера)
-            for file in glob(f'{NEW_FILES_PATH}/*.docx', recursive=True):
+            for file in glob(f'{DOWNLOADED_FILES_PATH}/**/*.docx', recursive=True):
                 text = read_docx(file)
                 process_file(file, text, cursor, connection)
 
             # чтение и сохранение данных из файлов формата pdf
             # (которые сохранили в папку после работы парсера)
-            for file in glob(f'{NEW_FILES_PATH}/*.pdf', recursive=True):
-                text = ocr_pdf(file)
+            for file in glob(f'{DOWNLOADED_FILES_PATH}/**/*.pdf', recursive=True):
+                text = read_pdf(file)
                 process_file(file, text, cursor, connection)
 
 
