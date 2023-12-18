@@ -1,1 +1,7 @@
 poetry.lock
+__pycache__/
+.vscode/
+.pytest_cache/
+downloaded
+files
+processed
