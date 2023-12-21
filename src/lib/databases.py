@@ -32,8 +32,8 @@ def get_connection() -> Connection:
 
 
 def process_file(file: str, text: str, cursor: DictCursor, connection: Connection):
-    url = r'https://nc.spbu.ru/s/' + file.split(os.sep)[1]
     file_name = file.split(os.sep)[-1]
+    url = f'https://nc.spbu.ru/s/{file.split(os.sep)[-3]}/download?path=%2F&files={file_name}'
     cursor.execute(
         'INSERT INTO files (file_name, url, content) VALUES (%s, %s, %s)',
         (file_name, url, text),
