@@ -1,0 +1,13 @@
+<html>
+<head>
+    <title>Результаты поиска</title>
+</head>
+<body>
+    {% for match in matchess %}
+        <div class="match">
+            <h3><a href="{{ match['url'] }}">{{ match['title'] }}</a></h3>
+            <h4 style="font-weight: normal;">{{ match['preview']|safe }}</h4>
+        </div>
+    {% endfor %}
+</body>
+</html>
