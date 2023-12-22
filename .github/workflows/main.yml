@@ -18,3 +18,4 @@ jobs:
         with:
           max-line-length: "100"
           path: "src"
+          ignore: "E203,W503"

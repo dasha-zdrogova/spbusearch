@@ -1,6 +1,6 @@
 import os
 from glob import glob
-import shutil
+import shutil  # noqa F401
 
 import pymysql
 from pymysql import Connection
@@ -8,7 +8,7 @@ from pymysql.cursors import DictCursor
 
 from data import Match
 from ocr_files import read_pdf, read_docx
-from consts import HOST, PORT, PROCESSED_FILES_PATH, DOWNLOADED_FILES_PATH
+from consts import HOST, PORT, PROCESSED_FILES_PATH, DOWNLOADED_FILES_PATH  # noqa F401
 
 
 # функция для подключения к серверу и создание базы данных
@@ -32,14 +32,17 @@ def get_connection() -> Connection:
 
 
 def process_file(file: str, text: str, cursor: DictCursor, connection: Connection):
-    file_name = file.split(os.sep)[-1]
-    url = f'https://nc.spbu.ru/s/{file.split(os.sep)[-3]}/download?path=%2F&files={file_name}'
+    chunks = file.split(os.sep)
+    index = chunks.index('downloaded')
+    dir = '%2F'.join(chunks[index + 3 : -1])
+    url = f'https://nc.spbu.ru/s/{chunks[index+1]}/download?path=%2F{dir}&files={chunks[-1]}'
+    file_name = chunks[-1]
     cursor.execute(
         'INSERT INTO files (file_name, url, content) VALUES (%s, %s, %s)',
         (file_name, url, text),
     )
     connection.commit()
-    shutil.move(file, PROCESSED_FILES_PATH)
+    # shutil.move(file, PROCESSED_FILES_PATH)
 
 
 # первичное добавление документов после парсинга в базу данных
