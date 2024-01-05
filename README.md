@@ -52,7 +52,7 @@ uvicorn src.api.main:app --host 0.0.0.0 --port 80 --reload
 На http://127.0.0.1:0080/search?search_str=приказ должны появиться файлы, содержащие слово "приказ".
 
 <!-- ROADMAP -->
-## Роадмап
+## Roadmap
 
 - [ ] Улучшить web UI
 - [ ] Добавить CLI
