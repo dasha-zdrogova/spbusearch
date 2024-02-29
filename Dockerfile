@@ -4,16 +4,6 @@ WORKDIR /code
 
 ENV DOCKER=true
 
-# VOLUME ./manticore/data /var/lib/manticore
-
-# RUN apt-get -yqq update && apt-get -yqq install docker.io
-
-# VOLUME /var/run/docker.sock
-
-# RUN dockerd
-
-# RUN docker run -e EXTRA=1 --name manticore -p 9306:9306 -d manticoresearch/manticore
-
 RUN pip3 install poetry
 
 COPY ./poetry.lock ./pyproject.toml /code/
