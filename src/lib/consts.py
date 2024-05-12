@@ -4,7 +4,7 @@ import platform
 if platform.system() == 'Windows':
     HOST = 'localhost'
 elif os.environ.get('DOCKER'):
-    HOST = 'host.docker.internal'
+    HOST = 'manticore'
 else:
     HOST = '0'
 
