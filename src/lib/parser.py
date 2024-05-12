@@ -25,6 +25,7 @@ HEADERS = {
 SPBU_EDU_URL = 'https://spbu.ru/sveden/education'
 DOWNLOAD_LINK = "https://nc.spbu.ru/index.php/s/"
 
+
 class Table(enum.StrEnum):
     ep_desc = 'Информация об описании образовательных программ'
 
