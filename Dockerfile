@@ -6,7 +6,7 @@ ENV DOCKER=true
 
 RUN pip3 install poetry
 
-COPY ./poetry.lock ./pyproject.toml /code/
+COPY ./pyproject.toml /code/
 
 RUN POETRY_VIRTUALENVS_CREATE=false poetry install --only main --no-interaction --no-root
 
