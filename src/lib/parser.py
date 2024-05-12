@@ -23,7 +23,7 @@ HEADERS = {
     'If-None-Match': 'W/"1698222845"',
 }
 SPBU_EDU_URL = 'https://spbu.ru/sveden/education'
-
+DOWNLOAD_LINK = "https://nc.spbu.ru/index.php/s/"
 
 class Table(enum.StrEnum):
     ep_desc = 'Информация об описании образовательных программ'
@@ -43,7 +43,6 @@ def get_info_from_ep_desc(soup: BeautifulSoup, code):
             info = row.find_all('td')
             if code:
                 if info[0].text in code:
-                    print(info[0].text, code)
                     links.append(info[6].find_all('a'))
 
         counter = 1
@@ -64,7 +63,7 @@ def get_info_from_ep_desc(soup: BeautifulSoup, code):
                     print(counter, f'{DOWNLOADED_FILES_PATH}/{catalog_url}/{file_name}.zip')
                     counter += 1
                     folder_name = catalog_url.split('/')[-1]
-                    response = requests.get(download_link)
+                    response = requests.get(DOWNLOAD_LINK + folder_name + "/download")
 
                     with open(f'{DOWNLOADED_FILES_PATH}/{folder_name}.zip', 'wb') as file:
                         file.write(response.content)
