@@ -33,8 +33,6 @@ func (s Service) Search(text model.UsersRequest) ([]model.UsersResponse, error) 
 		return nil, err
 	}
 
-	// fmt.Println(string(rawBytes))
-
 	unmErr := json.Unmarshal(rawBytes, &unm)
 	if unmErr != nil {
 		log.Fatal(unmErr)
