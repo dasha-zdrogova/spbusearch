@@ -9,7 +9,7 @@ import (
 	"cli.go/config"
 	"cli.go/model"
 	"cli.go/service"
-	"github.com/urfave/cli/v2"
+	cli "github.com/urfave/cli/v2"
 )
 
 var s = service.NewService()
