@@ -1,7 +1,10 @@
 package config
 
 const (
+	// HOST represents the IP address of the API service.
 	HOST = "192.168.106.2"
+
+	// PORT represents the port number of the API service.
 	PORT = "5000"
 )
 

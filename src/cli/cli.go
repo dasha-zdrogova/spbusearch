@@ -34,7 +34,7 @@ func main() {
 			{
 				Name:    "search",
 				Aliases: []string{"s"},
-				Action: func(ctx *cli.Context) error {
+				Action: func(_ *cli.Context) error {
 					request := model.UsersRequest{
 						Text: text,
 					}
@@ -45,19 +45,19 @@ func main() {
 					for _, note := range slice {
 						fmt.Println()
 						fmt.Println(config.Green + note.Title + config.Reset)
-						fmt.Println(config.Purple + note.Url + config.Reset)
+						fmt.Println(config.Purple + note.URL + config.Reset)
 						fmt.Println()
 
 						parts := strings.Split(note.Preview, "<b>")
-						fmt.Print(strings.ReplaceAll(parts[0], "\n", " "))
+						fmt.Print(strings.ReplaceAll(parts[0], "\n", ""))
 
 						for _, part := range parts[1:] {
 							subParts := strings.Split(part, "</b>")
 
-							text = strings.ReplaceAll(subParts[0], "\n", " ")
+							text = strings.ReplaceAll(subParts[0], "\n", "")
 							fmt.Print(config.Bold + config.Yellow + text + config.Reset)
 
-							text = strings.ReplaceAll(subParts[1], "\n", " ")
+							text = strings.ReplaceAll(subParts[1], "\n", "")
 							fmt.Print(text)
 						}
 						fmt.Println()
