@@ -17,6 +17,7 @@ def _get_path(path: str) -> str:
 
 PROCESSED_FILES_PATH = _get_path('../../processed')
 DOWNLOADED_FILES_PATH = _get_path('../../downloaded')
+PROPERTIES_PATH = _get_path('../../properties')
 
 WEB_PATH = _get_path('../web')
 TEMPLATES_PATH = os.path.join(WEB_PATH, 'templates')

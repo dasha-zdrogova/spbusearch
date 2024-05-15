@@ -11,7 +11,9 @@ services:
       - net
   api:
     container_name: api
-    build: .
+    build:
+      context: .
+      network: host
     depends_on:
       - manticore
     ports:

@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from ..lib import databases, consts
+from ..lib import consts, databases
 
 app = FastAPI()
 

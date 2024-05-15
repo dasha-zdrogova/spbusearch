@@ -1,11 +1,32 @@
+from __future__ import annotations
+
 import enum
+import json
+import logging
 import os
 import zipfile
+from dataclasses import asdict, dataclass
+from typing import Any
 
 import requests
 from bs4 import BeautifulSoup, element
+from consts import DOWNLOADED_FILES_PATH, PROPERTIES_PATH
+from setup import create_dirs
 
-from consts import DOWNLOADED_FILES_PATH
+logger = logging.getLogger(__name__)
+logger.setLevel('INFO')
+
+
+class Generator:
+    def __init__(self):
+        self.i = 0
+
+    def generate(self):
+        self.i += 1
+        return self.i - 1
+
+
+id_generator = Generator().generate
 
 HEADERS = {
     'Host': 'spbu.ru',
@@ -23,32 +44,103 @@ HEADERS = {
     'If-None-Match': 'W/"1698222845"',
 }
 SPBU_EDU_URL = 'https://spbu.ru/sveden/education'
-DOWNLOAD_LINK = "https://nc.spbu.ru/index.php/s/"
+DOWNLOAD_LINK = 'https://nc.spbu.ru/index.php/s/'
 
 
 class Table(enum.StrEnum):
     ep_desc = 'Информация об описании образовательных программ'
 
 
-def get_info_from_ep_desc(soup: BeautifulSoup, code):
+@dataclass
+class Link:
+    column: str
+    link: Any
+
+    @classmethod
+    def from_row(cls, row) -> list[Link]:
+        column_names = [
+            'Описание образовательной программы с приложением ее копии',
+            'Учебный план',
+            'Аннотации к рабочим программам дисциплин (по каждой дисциплине в составе обрзовательной программы)',
+            'Рабочие программы (по каждой дисциплине в составе образовательной программы)',
+            'Календарный учебный график',
+            'Рабочие программы практик, предусмотренных соответствующей образовательной программой',
+            'Методические и иные документы, разработанные образовательной организацией для обеспечения образовательного процесса, а также рабочие программы воспитания и календарные планы воспитательной работы, включаемых в ООП',
+        ]
+
+        res = []
+        links_iter = (c.find_all('a') for c in row[-len(column_names) :])
+
+        for column, links in zip(column_names[:1], links_iter):
+            for link in links:
+                res.append(cls(column=column, link=link))
+
+        return res
+
+
+@dataclass
+class EpDescRow:
+    id: int
+    code: str
+    field: str
+    level: str
+    name: str
+    links: list[Link]
+
+    @classmethod
+    def from_row(cls, row) -> EpDescRow:
+        links = Link.from_row(row)
+
+        return cls(
+            id=id_generator(),
+            code=row[0].text,
+            field=row[1].text,
+            level=row[2].text,
+            name=row[3].text,
+            links=links,
+        )
+
+    def into_dict(self) -> dict:
+        res = asdict(self)
+        res.pop('links')
+        return res
+
+
+def create_json_rows(rows: list[EpDescRow]):
+    with open(f'{PROPERTIES_PATH}/properties.json', 'w') as fp:
+        json.dump([r.into_dict() for r in rows], fp, indent=4)
+
+
+def get_info_from_ep_desc(soup: BeautifulSoup, codes: set[str]):
     target_header = soup.find('h3', string='Информация об описании образовательных программ')
     if target_header:
-        if not os.path.exists(DOWNLOADED_FILES_PATH):
-            os.makedirs(DOWNLOADED_FILES_PATH)
+        create_dirs()
         assert isinstance(table := target_header.find_next('table'), element.Tag)
+
+        print('found table, collecting rows')
+
         table = table.find_all('tr')
 
-        links = []
+        rows: list[EpDescRow] = []
 
         for row in table:
-            info = row.find_all('td')
-            if code:
-                if info[0].text in code:
-                    links.append(info[6].find_all('a'))
+            row = row.find_all('td')
+            if row[0].text in codes:
+                row = EpDescRow.from_row(row)
+                rows.append(row)
+
+        print('collection complete')
+        print('saving properties')
+
+        create_json_rows(rows)
+
+        print('properties saved')
+        print('downloading files')
 
         counter = 1
-        for i in range(len(links)):
-            for link in links[i]:
+        for row in rows:
+            for link in row.links:
+                link = link.link
                 catalog_url = link['href'].strip()
                 file_name = link.text
                 catalog_response = requests.get(catalog_url)
@@ -58,22 +150,30 @@ def get_info_from_ep_desc(soup: BeautifulSoup, code):
                         download_link := catalog.select_one('.primary.button'), element.Tag
                     )
                     download_link = download_link['href']
+
+                    print(f'downloading {file_name}')
+
                     if isinstance(download_link, list):
                         download_link = download_link[0]
 
-                    print(counter, f'{DOWNLOADED_FILES_PATH}/{catalog_url}/{file_name}.zip')
+                    print(counter, f'{catalog_url}/{file_name}.zip')
                     counter += 1
                     folder_name = catalog_url.split('/')[-1]
-                    response = requests.get(DOWNLOAD_LINK + folder_name + "/download")
+                    response = requests.get(DOWNLOAD_LINK + folder_name + '/download')
 
-                    with open(f'{DOWNLOADED_FILES_PATH}/{folder_name}.zip', 'wb') as file:
+                    print('downloading completed')
+
+                    if not os.path.exists(path := f'{DOWNLOADED_FILES_PATH}/{row.id}'):
+                        os.makedirs(path)
+
+                    with open(f'{DOWNLOADED_FILES_PATH}/{row.id}/{folder_name}.zip', 'wb') as file:
                         file.write(response.content)
                     with zipfile.ZipFile(
-                        f'{DOWNLOADED_FILES_PATH}/{folder_name}.zip', 'r'
+                        f'{DOWNLOADED_FILES_PATH}/{row.id}/{folder_name}.zip', 'r'
                     ) as zip_ref:
-                        zip_ref.extractall(f'{DOWNLOADED_FILES_PATH}/{folder_name}')
-                    if os.path.exists(f'{DOWNLOADED_FILES_PATH}/{folder_name}.zip'):
-                        os.remove(f'{DOWNLOADED_FILES_PATH}/{folder_name}.zip')
+                        zip_ref.extractall(f'{DOWNLOADED_FILES_PATH}/{row.id}/{folder_name}')
+                    if os.path.exists(f'{DOWNLOADED_FILES_PATH}/{row.id}/{folder_name}.zip'):
+                        os.remove(f'{DOWNLOADED_FILES_PATH}/{row.id}/{folder_name}.zip')
                 else:
                     print(
                         "f'Ошибка {catalog_response.status_code} при загрузке страницы с файлами'"
@@ -93,6 +193,6 @@ def get_info_from_table(table: Table, code=set()):
         print(f'Ошибка {spbu_edu_response.status_code} при загрузке основной страницы')
 
 
-table_instance = Table.ep_desc
+table = Table.ep_desc
 code = {'02.03.01'}
-get_info_from_table(table_instance, code)
+get_info_from_table(table, code)
