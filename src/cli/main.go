@@ -16,31 +16,33 @@ var s = service.NewService()
 
 func main() {
 	var text string
+	var level string
+	var code string
+	var name string
+	var field string
 	app := &cli.App{
-		Name:  "Spbusearch CLI",
-		Usage: "Need to write",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "text",
-				Usage:       "text that need to searching",
-				Destination: &text,
-			},
-		},
-		// Action: func (ctx *cli.Context) error {
-		// 	fmt.Println("Hello")
-		// 	return nil
-		// },
+		Name:      "spbusearch",
+		Usage:     "CLI tool for searching SPBU documents",
+		UsageText: "spbusearch [command] [options]",
 		Commands: []*cli.Command{
 			{
-				Name:    "search",
-				Aliases: []string{"s"},
+				Name:      "search",
+				UsageText: "spbusearch search [options]",
+				Aliases:   []string{"s"},
 				Action: func(_ *cli.Context) error {
 					request := model.UsersRequest{
-						Text: text,
+						Text:  text,
+						Level: level,
+						Code:  code,
+						Name:  name,
+						Field: field,
 					}
 					slice, err := s.Search(request)
 					if err != nil {
 						log.Fatal(err)
+					}
+					if len(slice) == 0 {
+						fmt.Println(config.Bold + config.Red + "Ничего не нашлось по данному запросу" + config.Reset)
 					}
 					for _, note := range slice {
 						fmt.Println()
@@ -64,6 +66,42 @@ func main() {
 						fmt.Println()
 					}
 					return nil
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "text",
+						Usage:       "text that need to searching",
+						Destination: &text,
+						Required:    true,
+					},
+					&cli.StringFlag{
+						Name:        "level",
+						Aliases:     []string{"l"},
+						Usage:       "filter for education programm level",
+						Destination: &level,
+						Required:    false,
+					},
+					&cli.StringFlag{
+						Name:        "code",
+						Aliases:     []string{"c"},
+						Usage:       "filter for education programm code",
+						Destination: &code,
+						Required:    false,
+					},
+					&cli.StringFlag{
+						Name:        "name",
+						Aliases:     []string{"n"},
+						Usage:       "filter for education programm name",
+						Destination: &name,
+						Required:    false,
+					},
+					&cli.StringFlag{
+						Name:        "field",
+						Aliases:     []string{"f"},
+						Usage:       "filter for education programm field",
+						Destination: &field,
+						Required:    false,
+					},
 				},
 			},
 		},
