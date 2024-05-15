@@ -15,6 +15,4 @@ COPY ./src ./src
 COPY ./downloaded ./downloaded
 COPY ./properties ./properties
 
-RUN python3 ./src/lib/setup.py
-
-ENTRYPOINT uvicorn src.api.main:app --host 0.0.0.0 --port 5000
+ENTRYPOINT python3 ./src/lib/setup.py && uvicorn src.api.main:app --host 0.0.0.0 --port 5000
