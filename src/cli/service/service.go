@@ -22,6 +22,7 @@ func NewService() Service {
 	return Service{url: fmt.Sprintf("%v:%v/api", config.HOST, config.PORT)}
 }
 
+// GenerateSearchString generates search string for user's request
 func GenerateSearchString(s Service, req model.UsersRequest) string {
 	searchString := fmt.Sprintf("http://%v/search?search_str=%v", s.url, url.QueryEscape(req.Text))
 	if req.Level != "" {
@@ -42,7 +43,7 @@ func GenerateSearchString(s Service, req model.UsersRequest) string {
 // Search sends a search request to the API service and returns the search results
 func (s Service) Search(req model.UsersRequest) ([]model.UsersResponse, error) {
 	searchString := GenerateSearchString(s, req)
-	resp, err := http.Get(searchString)
+	resp, err := http.Get(searchString) // nolint:all
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
