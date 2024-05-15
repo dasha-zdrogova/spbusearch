@@ -16,27 +16,24 @@ var s = service.NewService()
 
 func main() {
 	var text string
+	var level string
+	var code string
+	var name string
+	var field string
 	app := &cli.App{
 		Name:  "Spbusearch CLI",
 		Usage: "Need to write",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "text",
-				Usage:       "text that need to searching",
-				Destination: &text,
-			},
-		},
-		// Action: func (ctx *cli.Context) error {
-		// 	fmt.Println("Hello")
-		// 	return nil
-		// },
 		Commands: []*cli.Command{
 			{
 				Name:    "search",
 				Aliases: []string{"s"},
 				Action: func(_ *cli.Context) error {
 					request := model.UsersRequest{
-						Text: text,
+						Text:  text,
+						Level: level,
+						Code:  code,
+						Name:  name,
+						Field: field,
 					}
 					slice, err := s.Search(request)
 					if err != nil {
@@ -64,6 +61,42 @@ func main() {
 						fmt.Println()
 					}
 					return nil
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "text",
+						Usage:       "text that need to searching",
+						Destination: &text,
+						Required:    true,
+					},
+					&cli.StringFlag{
+						Name:        "level",
+						Aliases:     []string{"l"},
+						Usage:       "Filter for education programm level",
+						Destination: &level,
+						Required:    false,
+					},
+					&cli.StringFlag{
+						Name:        "code",
+						Aliases:     []string{"c"},
+						Usage:       "Filter for education programm code",
+						Destination: &code,
+						Required:    false,
+					},
+					&cli.StringFlag{
+						Name:        "name",
+						Aliases:     []string{"n"},
+						Usage:       "Filter for education programm name",
+						Destination: &name,
+						Required:    false,
+					},
+					&cli.StringFlag{
+						Name:        "field",
+						Aliases:     []string{"f"},
+						Usage:       "Filter for education programm field",
+						Destination: &field,
+						Required:    false,
+					},
 				},
 			},
 		},
