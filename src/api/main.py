@@ -1,10 +1,11 @@
 from dataclasses import asdict
+from typing import Optional
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from ..lib import databases, consts
+from ..lib import consts, databases
 
 app = FastAPI()
 
@@ -16,7 +17,13 @@ def get_matches_json(search_str: str):
 
 
 @app.get('/api/search')
-async def get(search_str: str):
+async def get(
+    search_str: str,
+    code: Optional[str] = None,
+    field: Optional[str] = None,
+    level: Optional[str] = None,
+    name: Optional[str] = None,
+):
     return get_matches_json(search_str)
 
 

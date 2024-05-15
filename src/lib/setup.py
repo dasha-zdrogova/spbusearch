@@ -1,30 +1,32 @@
-from typing import Callable
-import time
-
 import os
+import time
+from typing import Callable
 
-from consts import PROCESSED_FILES_PATH, DOWNLOADED_FILES_PATH
+from consts import DOWNLOADED_FILES_PATH, PROCESSED_FILES_PATH, PROPERTIES_PATH
 
 
 def create_dirs():
-    dirs = (PROCESSED_FILES_PATH, DOWNLOADED_FILES_PATH)
+    dirs = (PROCESSED_FILES_PATH, DOWNLOADED_FILES_PATH, PROPERTIES_PATH)
     for dir in dirs:
         if not os.path.exists(dir):
             os.makedirs(dir)
 
 
 def retry(func: Callable, n=5, timeout=5.0):
-    for _ in range(n):
+    for i in range(n):
+        print(f'\tattempt #{i}')
         try:
             return func()
-        except Exception:
+        except Exception as e:
+            print(e)
             time.sleep(timeout)
+    print('could not create tables')
 
 
 if __name__ == '__main__':
-    create_dirs()
-
     from databases import create_db, data_for_databases
 
+    print('trying to create tables')
     retry(create_db)
+    print('trying to insert data into manticore')
     data_for_databases()

@@ -24,8 +24,8 @@ def read_pdf(file_path) -> str:
 
     text_dict = ''
     for current_page in range(len(doc)):
-        if doc.load_page(current_page).get_text('text') != '':
-            text_dict += doc.load_page(current_page).get_text('text')
+        if (text := doc.load_page(current_page).get_text('text')) != '':
+            text_dict += text
     if len(text_dict) > 0:
         return text_dict
     else:
