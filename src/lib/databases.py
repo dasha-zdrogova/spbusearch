@@ -80,7 +80,7 @@ def process_file(file: str, text: str, cursor: DictCursor, connection: Connectio
     index = chunks.index('downloaded')
     id = int(chunks[index + 1])
     dir = '%2F'.join(chunks[index + 4 : -1])
-    url = f'https://nc.spbu.ru/index.php/s/{chunks[index+2]}/download?path=%2F{dir}&files={chunks[-1]}'
+    url = f'https://nc.spbu.ru/index.php/s/{chunks[index+2]}/download?path=%2F{dir}&files={chunks[-1]}'  # noqa E501
     file_name = chunks[-1]
     cursor.execute(
         'INSERT INTO files (file_name, url, content, properties_id) VALUES (%s, %s, %s, %s)',
