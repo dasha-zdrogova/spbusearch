@@ -21,12 +21,14 @@ func main() {
 	var name string
 	var field string
 	app := &cli.App{
-		Name:  "Spbusearch CLI",
-		Usage: "Need to write",
+		Name:      "spbusearch",
+		Usage:     "CLI tool for searching SPBU documents",
+		UsageText: "spbusearch [command] [options]",
 		Commands: []*cli.Command{
 			{
-				Name:    "search",
-				Aliases: []string{"s"},
+				Name:      "search",
+				UsageText: "spbusearch search [options]",
+				Aliases:   []string{"s"},
 				Action: func(_ *cli.Context) error {
 					request := model.UsersRequest{
 						Text:  text,
@@ -38,6 +40,9 @@ func main() {
 					slice, err := s.Search(request)
 					if err != nil {
 						log.Fatal(err)
+					}
+					if len(slice) == 0 {
+						fmt.Println(config.Bold + config.Red + "Ничего не нашлось по данному запросу" + config.Reset)
 					}
 					for _, note := range slice {
 						fmt.Println()
@@ -72,28 +77,28 @@ func main() {
 					&cli.StringFlag{
 						Name:        "level",
 						Aliases:     []string{"l"},
-						Usage:       "Filter for education programm level",
+						Usage:       "filter for education programm level",
 						Destination: &level,
 						Required:    false,
 					},
 					&cli.StringFlag{
 						Name:        "code",
 						Aliases:     []string{"c"},
-						Usage:       "Filter for education programm code",
+						Usage:       "filter for education programm code",
 						Destination: &code,
 						Required:    false,
 					},
 					&cli.StringFlag{
 						Name:        "name",
 						Aliases:     []string{"n"},
-						Usage:       "Filter for education programm name",
+						Usage:       "filter for education programm name",
 						Destination: &name,
 						Required:    false,
 					},
 					&cli.StringFlag{
 						Name:        "field",
 						Aliases:     []string{"f"},
-						Usage:       "Filter for education programm field",
+						Usage:       "filter for education programm field",
 						Destination: &field,
 						Required:    false,
 					},

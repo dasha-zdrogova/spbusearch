@@ -42,7 +42,6 @@ func GenerateSearchString(s Service, req model.UsersRequest) string {
 // Search sends a search request to the API service and returns the search results
 func (s Service) Search(req model.UsersRequest) ([]model.UsersResponse, error) {
 	searchString := GenerateSearchString(s, req)
-	log.Print(searchString)
 	resp, err := http.Get(searchString)
 	if err != nil {
 		log.Fatal(err)
