@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 from glob import glob
+from typing import Any, Optional
 
 import pymysql
 from consts import (
@@ -24,28 +25,16 @@ def create_db():
             cursor.execute('DROP TABLE IF EXISTS files')
             connection.commit()
 
-            cursor.execute('DROP TABLE IF EXISTS properties')
-            connection.commit()
-
-            cursor.execute(
-                ' CREATE TABLE IF NOT EXISTS properties'
-                ' ('
-                ' id bigint,'
-                ' code string attribute,'
-                ' field string attribute,'
-                ' level string attribute,'
-                ' name string attribute'
-                ' )'
-            )
-            connection.commit()
-
             cursor.execute(
                 ' CREATE TABLE IF NOT EXISTS files'
                 ' ('
                 ' file_name string attribute indexed,'
                 ' url string attribute,'
                 ' content text,'
-                ' properties_id bigint'
+                ' code string attribute indexed,'
+                ' field string attribute indexed,'
+                ' level string attribute indexed,'
+                ' name string attribute indexed'
                 ' )'
                 " morphology='stem_enru'"
             )
@@ -56,35 +45,33 @@ def get_connection() -> Connection:
     return pymysql.connect(host=HOST, port=PORT, cursorclass=DictCursor)
 
 
-def process_properties(cursor: DictCursor, connection: Connection):
+def process_properties() -> dict:
     with open(f'{PROPERTIES_PATH}/properties.json') as f:
-        properties: dict = json.load(f)
-
-    for property in properties:
-        cursor.execute(
-            'INSERT INTO properties (id, code, field, level, name) VALUES (%s, %s, %s, %s, %s)',
-            (
-                property['id'],
-                property['code'],
-                property['field'],
-                property['level'],
-                property['name'],
-            ),
-        )
-
-    connection.commit()
+        return json.load(f)
 
 
-def process_file(file: str, text: str, cursor: DictCursor, connection: Connection):
+def process_file(
+    file: str, content: str, properties: dict[str, Any], cursor: DictCursor, connection: Connection
+):
     chunks = file.split(os.sep)
     index = chunks.index('downloaded')
-    id = int(chunks[index + 1])
+    id = chunks[index + 1]
+    file_props: dict = properties[id]
     dir = '%2F'.join(chunks[index + 4 : -1])
     url = f'https://nc.spbu.ru/index.php/s/{chunks[index+2]}/download?path=%2F{dir}&files={chunks[-1]}'  # noqa E501
     file_name = chunks[-1]
     cursor.execute(
-        'INSERT INTO files (file_name, url, content, properties_id) VALUES (%s, %s, %s, %s)',
-        (file_name, url, text, id),
+        ' INSERT INTO files (file_name, url, content, code, field, level, name)'
+        ' VALUES (%s, %s, %s, %s, %s, %s, %s)',
+        (
+            file_name,
+            url,
+            content,
+            file_props['code'],
+            file_props['field'],
+            file_props['level'],
+            file_props['name'],
+        ),
     )
     connection.commit()
     shutil.move(file, PROCESSED_FILES_PATH)
@@ -102,34 +89,61 @@ def data_for_databases():
         elif not os.listdir(file):
             os.rmdir(file)
 
+    properties = process_properties()
+
     with get_connection() as connection:
         with connection.cursor() as cursor:
-            process_properties(cursor, connection)
-
             # чтение и сохранение данных из файлов формата docx
             # (которые сохранили в папку после работы парсера)
             for file in glob(f'{DOWNLOADED_FILES_PATH}/**/*.docx', recursive=True):
                 text = read_docx(file)
-                process_file(file, text, cursor, connection)
+                process_file(file, text, properties, cursor, connection)
 
             # чтение и сохранение данных из файлов формата pdf
             # (которые сохранили в папку после работы парсера)
             for file in glob(f'{DOWNLOADED_FILES_PATH}/**/*.pdf', recursive=True):
                 text = read_pdf(file)
-                process_file(file, text, cursor, connection)
+                process_file(file, text, properties, cursor, connection)
 
 
 # функция для полнотекстового поиска
-def get_matches(search_str: str) -> list[Match]:
+def get_matches(
+    content: str,
+    code: Optional[str] = None,
+    field: Optional[str] = None,
+    level: Optional[str] = None,
+    name: Optional[str] = None,
+) -> list[Match]:
+    def add_to_filters(name: str, value):
+        if value is not None:
+            match_filters.append(f'@{name} {value}')
+
+    match_filters = []
+
+    add_to_filters('content', content)
+    add_to_filters('code', code)
+    add_to_filters('field', field)
+    add_to_filters('level', level)
+    add_to_filters('name', name)
+
+    inside_match = ' '.join(match_filters)
+
     res = []
     with get_connection() as connection:
         with connection.cursor() as cursor:
+            print(
+                'fetching:\n\t'
+                f'SELECT file_name, url, highlight() FROM files WHERE MATCH({inside_match})'
+            )
+
             cursor.execute(
                 'SELECT file_name, url, highlight() FROM files WHERE MATCH(%s)',
-                (search_str,),
+                (inside_match,),
             )
-            result = cursor.fetchall()
-            for row in result:
+
+            fetch_result = cursor.fetchall()
+            print(f'got {len(fetch_result)} rows from db')
+            for row in fetch_result:
                 res.append(
                     Match(url=row['url'], title=row['file_name'], preview=row['highlight()'])
                 )
