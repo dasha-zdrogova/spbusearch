@@ -8,6 +8,7 @@ import zipfile
 from dataclasses import asdict, dataclass
 from typing import Any
 
+from frozendict import frozendict
 import requests
 from bs4 import BeautifulSoup, element
 from consts import DOWNLOADED_FILES_PATH, PROPERTIES_PATH
@@ -100,15 +101,16 @@ class EpDescRow:
             links=links,
         )
 
-    def into_dict(self) -> dict:
+    def into_dict(self) -> frozendict:
         res = asdict(self)
         res.pop('links')
-        return res
+        res.pop('id')
+        return frozendict(res)
 
 
 def create_json_rows(rows: list[EpDescRow]):
     with open(f'{PROPERTIES_PATH}/properties.json', 'w') as fp:
-        json.dump([r.into_dict() for r in rows], fp, indent=4)
+        json.dump({r.id: r.into_dict() for r in rows}, fp, indent=4)
 
 
 def get_info_from_ep_desc(soup: BeautifulSoup, codes: set[str]):
