@@ -2,7 +2,10 @@ module cli.go
 
 go 1.22.1
 
-require github.com/urfave/cli/v2 v2.27.2
+require (
+	github.com/savioxavier/termlink v1.3.0
+	github.com/urfave/cli/v2 v2.27.2
+)
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect

@@ -26,16 +26,16 @@ func NewService() Service {
 func GenerateSearchString(s Service, req model.UsersRequest) string {
 	searchString := fmt.Sprintf("http://%v/search?search_str=%v", s.url, url.QueryEscape(req.Text))
 	if req.Level != "" {
-		searchString = fmt.Sprintf("%v&level=%v", searchString, req.Level)
+		searchString = fmt.Sprintf("%v&level=%v", searchString, url.QueryEscape(req.Level))
 	}
 	if req.Code != "" {
-		searchString = fmt.Sprintf("%v&code=%v", searchString, req.Code)
+		searchString = fmt.Sprintf("%v&code=%v", searchString, url.QueryEscape(req.Code))
 	}
 	if req.Name != "" {
-		searchString = fmt.Sprintf("%v&name=%v", searchString, req.Name)
+		searchString = fmt.Sprintf("%v&name=%v", searchString, url.QueryEscape(req.Name))
 	}
 	if req.Field != "" {
-		searchString = fmt.Sprintf("%v&field=%v", searchString, req.Field)
+		searchString = fmt.Sprintf("%v&field=%v", searchString, url.QueryEscape(req.Field))
 	}
 	return searchString
 }

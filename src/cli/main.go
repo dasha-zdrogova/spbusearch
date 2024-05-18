@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 
 	"cli.go/config"
 	"cli.go/model"
 	"cli.go/service"
+	termlink "github.com/savioxavier/termlink"
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -47,7 +49,13 @@ func main() {
 					for _, note := range slice {
 						fmt.Println()
 						fmt.Println(config.Green + note.Title + config.Reset)
-						fmt.Println(config.Purple + note.URL + config.Reset)
+
+						name := strings.Split(note.URL, "files=")
+						if termlink.SupportsHyperlinks() {
+							fmt.Println(config.Purple + termlink.Link(note.URL, name[0]+"files="+url.QueryEscape(name[1])) + config.Reset)
+						} else {
+							fmt.Println(config.Purple + name[0] + "files=" + url.QueryEscape(name[1]) + config.Reset)
+						}
 						fmt.Println()
 
 						parts := strings.Split(note.Preview, "<b>")
