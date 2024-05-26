@@ -1,23 +1,34 @@
 services:
-  manticore:
-    image: manticoresearch/manticore
-    environment:
-      - EXTRA=1
-    restart: always
-    ports:
-      - 9306:9306
-      - 9308:9308
-    networks:
-      - net
-  api:
-    container_name: api
+  # manticore:
+  #   image: manticoresearch/manticore
+  #   environment:
+  #     - EXTRA=1
+  #   restart: always
+  #   ports:
+  #     - 9306:9306
+  #     - 9308:9308
+  #   networks:
+  #     - net
+  # api:
+  #   container_name: api
+  #   build:
+  #     context: .
+  #     network: host
+  #   depends_on:
+  #     - manticore
+  #   ports:
+  #     - 5000:5000
+  #   networks:
+  #     - net
+  frontend:
     build:
-      context: .
-      network: host
-    depends_on:
-      - manticore
+      context: ./web
+    # depends_on:
+    #   - api
+    container_name: frontend
     ports:
-      - 5000:5000
+      - "80:80"
+    restart: always
     networks:
       - net
 

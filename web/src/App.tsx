@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import {
   Center,
@@ -12,15 +12,13 @@ import {
   TextInput
 } from '@mantine/core'
 import { Button } from '@mantine/core'
-import { createTheme, rem } from '@mantine/core'
+import { createTheme } from '@mantine/core'
 import '@mantine/core/styles.css'
 import { IconSearch } from '@tabler/icons-react'
 
 import './App.css'
-import reactLogo from './assets/react.svg'
 import { ResultCard } from './components/ResultCard'
 import { Result } from './types'
-import viteLogo from '/vite.svg'
 
 const theme = createTheme({
   primaryColor: 'violet',
@@ -53,7 +51,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
 
   const search = async ({ query, level, code, field, name }: Params) => {
-    let url = `http://localhost:5000/api/search?search_str=${query}`
+    let url = `${import.meta.env.VITE_API_URL}/search?search_str=${query}`
 
     if (level) url += `&level=${level}`
     if (code) url += `&code=${code}`
