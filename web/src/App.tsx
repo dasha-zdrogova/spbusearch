@@ -9,7 +9,8 @@ import {
   Select,
   Stack,
   Text,
-  TextInput
+  TextInput,
+  Title
 } from '@mantine/core'
 import { Button } from '@mantine/core'
 import { createTheme } from '@mantine/core'
@@ -55,8 +56,8 @@ function App() {
 
     if (level) url += `&level=${level}`
     if (code) url += `&code=${code}`
-    if (field) url += `&code=${field}`
-    if (name) url += `&code=${name}`
+    if (field) url += `&field=${field}`
+    if (name) url += `&name=${name}`
 
     setIsLoading(true)
 
@@ -74,7 +75,9 @@ function App() {
   return (
     <MantineProvider theme={theme}>
       <Container py="xl">
-        <Stack
+        <Center><Title order={1}>spbusearch</Title></Center>
+
+        <Stack mt="lg"
           component="form"
           onSubmit={(e) => {
             e.preventDefault()
@@ -168,6 +171,14 @@ function App() {
             {results?.map((result) => <ResultCard {...result} />)}
           </Stack>
         )}
+
+        {results && results.length > 0 && (
+          <Center><Text c="dimmed">
+            Всего результатов: {results.length}
+          </Text>
+          </Center>
+        )}
+
       </Container>
     </MantineProvider>
   )
