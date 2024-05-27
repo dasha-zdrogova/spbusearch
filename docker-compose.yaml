@@ -20,6 +20,17 @@ services:
       - 5000:5000
     networks:
       - net
+  frontend:
+    build:
+      context: ./web
+    depends_on:
+      - api
+    container_name: frontend
+    ports:
+      - "80:80"
+    restart: always
+    networks:
+      - net
 
 networks:
   net:

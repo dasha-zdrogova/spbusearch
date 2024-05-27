@@ -2,12 +2,23 @@ from dataclasses import asdict
 from typing import Optional
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from ..lib import consts, databases
 
 app = FastAPI()
+
+origins = ['*']
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
 templates = Jinja2Templates(directory=consts.TEMPLATES_PATH)
 
@@ -44,7 +55,10 @@ async def search(
 ):
     return templates.TemplateResponse(
         'search_result.html',
-        {'request': request, 'matchess': get_matches_json(search_str, code, field, level, name)},
+        {
+            'request': request,
+            'matchess': get_matches_json(search_str, code, field, level, name),
+        },
     )
 
 
