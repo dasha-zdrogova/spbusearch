@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 from glob import glob
 from typing import Any, Optional
 
@@ -9,7 +8,6 @@ from consts import (
     DOWNLOADED_FILES_PATH,
     HOST,
     PORT,
-    PROCESSED_FILES_PATH,
     PROPERTIES_PATH,
 )
 from data import Match
@@ -74,7 +72,6 @@ def process_file(
         ),
     )
     connection.commit()
-    shutil.move(file, PROCESSED_FILES_PATH)
 
 
 # первичное добавление документов после парсинга в базу данных
